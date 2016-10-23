@@ -1,0 +1,7 @@
+{
+  "name": "fallen",
+  "dependencies": {
+    "jquery": "2.0.x",
+    "angular": "1.x.x"
+  }
+}
