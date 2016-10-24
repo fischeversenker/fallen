@@ -1,25 +1,27 @@
-var options = {
-    canvas: {
-        width: 200,
-        height: 200,
-    },
-};
-
 var colorThief = new ColorThief();
+
+function CSImage(id, src) {
+  this.id = id;
+  this.src = src;
+}
+CSImage.prototype.showDetails = function() {
+  console.log(this);
+};
 
 angular.module('app', [])
     .directive('colorSorter', function() {
 
         return {
             scope: {
-              "imgFolder": "@",
+              "imgFolder": "@?",
               "imgCount": "@",
-              "imgPrefix": "@",
+              "imgPrefix": "@?",
             },
             restrict: "A",
             link: function($scope, elem, attrs) {
 
-                console.log($scope);
+                $scope.imgFolder = $scope.imgFolder || "assets/img/";
+                $scope.imgPrefix = $scope.imgPrefix || "";
                 $scope.images = makeImagesArray($scope.imgFolder, $scope.imgPrefix, $scope.imgCount);
 
                 // updates images objects with mainColor
@@ -45,12 +47,8 @@ angular.module('app', [])
                     if (a.mainColor.g < b.mainColor.g) return true;
                     return false;
                 }
-
-                $scope.showDetails = function(id) {
-                  console.log(getImage(id));
-                };
             },
-            template: '<img ng-repeat="img in images" ng-click="showDetails(img.id)" src="{{img.src}}" /><button ng-click="updateImgs()">Click me!</button>',
+            template: '<img ng-repeat="img in images" ng-click="img.showDetails()" src="{{img.src}}" /><button ng-click="updateImgs()">Click me!</button>',
         };
 
     });
@@ -58,10 +56,8 @@ angular.module('app', [])
 function makeImagesArray(folder, prefix, count) {
   var res = [];
   for(var i = 0; i < count; i++) {
-    res.push({
-      src: folder + prefix + (1 + i) + '.jpg',
-      id: i,
-    });
+    var img = new CSImage(i, folder + prefix + (1 + i) + '.jpg');
+    res.push(img);
   }
   return res;
 }
