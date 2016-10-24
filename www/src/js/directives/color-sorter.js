@@ -11,54 +11,29 @@ angular.module('app', [])
     .directive('colorSorter', function() {
 
         return {
-            // scope: {
-            //   "imgFolder": "@",
-            //   "imgCount": "@",
-            //   "imgPrefix": "@",
-            // },
+            scope: {
+              "imgFolder": "@",
+              "imgCount": "@",
+              "imgPrefix": "@",
+            },
             restrict: "A",
             link: function($scope, elem, attrs) {
 
                 console.log($scope);
-                $scope.images = [{
-                    id: 0,
-                }, {
-                    id: 1,
-                }, {
-                    id: 2,
-                }, {
-                    id: 3,
-                }, {
-                    id: 4,
-                }, {
-                    id: 5,
-                }, {
-                    id: 6,
-                }, {
-                    id: 7,
-                }, {
-                    id: 8,
-                }, {
-                    id: 9,
-                }, {
-                    id: 10,
-                }, {
-                    id: 11,
-                }, {
-                    id: 12,
-                }];
+                $scope.images = makeImagesArray($scope.imgFolder, $scope.imgPrefix, $scope.imgCount);
 
                 // updates images objects with mainColor
                 $scope.updateImgs = function() {
+                    console.log("updating....");
                     $(elem).find('img').each(function(index, value) {
                         var mCol = colorThief.getColor(value);
-                        getImageWithId(index).mainColor = {r: mCol[0], g: mCol[1], b: mCol[2]};
+                        getImage(index).mainColor = {r: mCol[0], g: mCol[1], b: mCol[2]};
                     });
                     sortImages($scope.images, imageCompFn);
                     $(elem).find('img').css('width', window.innerWidth / $scope.images.length);
                 };
 
-                function getImageWithId(id) {
+                function getImage(id) {
                     for (var i in $scope.images)
                       if ($scope.images[i].id === id)
                         return $scope.images[i];
@@ -72,13 +47,24 @@ angular.module('app', [])
                 }
 
                 $scope.showDetails = function(id) {
-                  console.log(getImageWithId(id));
+                  console.log(getImage(id));
                 };
             },
-            template: '<img ng-repeat="img in images" ng-click="showDetails(img.id)" src="assets/img/leaf-{{img.id + 1}}.jpg" />',
+            template: '<img ng-repeat="img in images" ng-click="showDetails(img.id)" src="{{img.src}}" /><button ng-click="updateImgs()">Click me!</button>',
         };
 
     });
+
+function makeImagesArray(folder, prefix, count) {
+  var res = [];
+  for(var i = 0; i < count; i++) {
+    res.push({
+      src: folder + prefix + (1 + i) + '.jpg',
+      id: i,
+    });
+  }
+  return res;
+}
 
 function sortImages(images, sortFn) {
     for (var i = 0; i < images.length; i++) {

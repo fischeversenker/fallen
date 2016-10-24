@@ -2,5 +2,8 @@
   "name": "fallen",
   "dependencies": {
     "bower": "1.7.x"
+  },
+  "scripts": {
+    "postinstall": "bower install"
   }
 }
