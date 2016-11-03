@@ -1,76 +1,47 @@
-var colorThief = new ColorThief();
+(function() {
+    'use strict';
 
-function CSImage(id, src) {
-  this.id = id;
-  this.src = src;
-}
-CSImage.prototype.showDetails = function() {
-  console.log(this);
-};
+    angular.module('csDirectives', [])
+        .directive('colorSorter', ['$document', 'csImageService', function($document, csImageService) {
 
-angular.module('app', [])
-    .directive('colorSorter', function() {
-
-        return {
-            scope: {
-              "imgFolder": "@?",
-              "imgCount": "@",
-              "imgPrefix": "@?",
-            },
-            restrict: "A",
-            link: function($scope, elem, attrs) {
-
-                $scope.imgFolder = $scope.imgFolder || "assets/img/";
-                $scope.imgPrefix = $scope.imgPrefix || "";
-                $scope.images = makeImagesArray($scope.imgFolder, $scope.imgPrefix, $scope.imgCount);
-
-                // updates images objects with mainColor
-                $scope.updateImgs = function() {
-                    console.log("updating....");
-                    $(elem).find('img').each(function(index, value) {
-                        var mCol = colorThief.getColor(value);
-                        getImage(index).mainColor = {r: mCol[0], g: mCol[1], b: mCol[2]};
-                    });
-                    sortImages($scope.images, imageCompFn);
-                    $(elem).find('img').css('width', window.innerWidth / $scope.images.length);
-                };
-
-                function getImage(id) {
-                    for (var i in $scope.images)
-                      if ($scope.images[i].id === id)
-                        return $scope.images[i];
-                    return null;
-                }
-
-                // surce
-                function imageCompFn(a, b) {
-                    if (a.mainColor.g < b.mainColor.g) return true;
-                    return false;
-                }
-            },
-            template: '<img ng-repeat="img in images" ng-click="img.showDetails()" src="{{img.src}}" /><button ng-click="updateImgs()">Click me!</button>',
-        };
-
-    });
-
-function makeImagesArray(folder, prefix, count) {
-  var res = [];
-  for(var i = 0; i < count; i++) {
-    var img = new CSImage(i, folder + prefix + (1 + i) + '.jpg');
-    res.push(img);
-  }
-  return res;
-}
-
-function sortImages(images, sortFn) {
-    for (var i = 0; i < images.length; i++) {
-        for (var j = 0; j < images.length; j++) {
-            if (sortFn(images[i], images[j])) {
-                // swaps images i and j
-                var tmp = images[i];
-                images[i] = images[j];
-                images[j] = tmp;
+            function imageCompFn(a, b) {
+                if (a.mainColor.g < b.mainColor.g) return true;
+                return false;
             }
-        }
-    }
-}
+
+            return {
+                scope: true,
+                bindToController: {
+                  "imgFolder": "@?",
+                  "imgCount": "@",
+                  "imgPrefix": "@?",
+                },
+                controllerAs: "ctrl",
+                restrict: "E",
+                controller: function($scope, $element) {
+                    var vm = this;
+
+                    vm.imgFolder = vm.imgFolder || "assets/imgs/";
+                    vm.imgPrefix = vm.imgPrefix || "";
+                    vm.images    = csImageService.makeImagesArray(vm.imgFolder, vm.imgPrefix, vm.imgCount);
+
+                    // update images only when dom is ready
+                    $document.ready(function() {
+                        var $imgs = $($($element).find('.cs-image'));
+                        $imgs.each(function(i, dom) {
+                            dom.onload = function() {
+                                csImageService.updateImage(dom);
+                            };
+                        });
+                        $imgs.css('width', window.innerWidth / vm.images.length);
+                    });
+
+                    csImageService.ready(function() {
+                        vm.images = csImageService.sortImages(imageCompFn); // retrieve sorted array
+                        $scope.$digest(); // actually show the changes
+                    });
+                },
+                template: '<img ng-repeat="img in ctrl.images" ng-click="img.showDetails()" ng-src="{{img.src}}" class="cs-image" id="{{img.id}}" />',
+            };
+        }]);
+    })();
